@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { Image as VanImage,ImagePreview,Picker,Switch,Form, Field, CellGroup,Search,Rate,Progress,Popup,Toast,Loading,Sticky,List,Empty,Icon,DropdownMenu, DropdownItem,Button,Tabbar, TabbarItem } from 'vant';
+import { Image as VanImage,ImagePreview,CountDown,Picker,Switch,Form, Field, CellGroup,Search,Rate,Progress,Popup,Toast,Loading,Sticky,List,Empty,Icon,DropdownMenu, DropdownItem,Button,Tabbar, TabbarItem } from 'vant';
 import 'vant/lib/index.css';
 import App from './App.vue'
 import router from './router'
@@ -31,4 +31,5 @@ app.use(router)
 app.use(DropdownMenu);
 app.use(DropdownItem);
 app.use(Button)
+app.use(CountDown)
 app.mount('#app')

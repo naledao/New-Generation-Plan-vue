@@ -149,7 +149,7 @@ const Confirmweek=(value)=>{
 const showPic=()=>{
   showRight.value=true
   let cv=props.pic
-  image.value=cv.replace('s_ratio_poster','1')
+  image.value=cv.replace('s_ratio_poster','l').replace("jpg","webp")
   console.log(image.value)
 }
 const image=ref('')

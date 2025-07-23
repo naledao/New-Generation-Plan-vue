@@ -176,12 +176,6 @@ const getAllTimes=async ()=> {
   const data = await getMonthlyAnime('/addon.php?r=bangumi/table')
   html.value = data.data
   if (dom.value) {
-    let elementById = await dom.value.getElementsByTagName('form')
-    let nexturl=elementById[0].action.substring(21).trim()
-    const data2 = await getMonthlyAnime(nexturl)
-    robotTestHtml.value=data2.data
-    elementById=await robotTest.value.getElementsByTagName('form')
-    elementById[0].submit()
     const be=await dom.value.getElementsByClassName('module')
     for(let index=2;index<be[1].childNodes.length;index++){
       if(be[1].childNodes.item(index).nodeName==='LI'){
@@ -300,7 +294,7 @@ const confirmRenew=async ()=>{
       curnum.value=curnum.value+1
       tempor1.value.name=value[i].name
       tempor1.value.pic=res.pic
-      await sleep(3000)
+      await sleep(8000)
     }
   }
   bthload.value=false
@@ -312,38 +306,58 @@ const closePop=async ()=>{
 const douban2html=ref('')
 const douban2=ref()
 const curdou=ref({})
-const getPicAndDec2=async (name)=>{
-  const res=await getdouban(name)
-  douban2html.value=res.data
-  if(douban2.value){
-    const el1=await douban2.value.getElementsByTagName('script')
-    const text=el1.item(6).text.trim()
-    curdou.value=JSON.parse(text.substring(18,text.length-29)).items[0]
-    let pic='https://images.wallpaperscraft.com/image/single/penguin_street_wall_1268495_240x320.jpg'
-    let rate='0'
-    let dec='暂无介绍'
-    let id='-1'
-    if(curdou.value){
-      if('cover_url' in curdou.value){
-        pic=curdou.value.cover_url
+const getPicAndDec2=async (name)=> {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const res = await getdouban(name)
+    douban2html.value = res.data
+    if (douban2.value) {
+      const scripts = await douban2.value.getElementsByTagName('script')
+      const dataScript = Array.from(scripts).find(s =>
+          s.textContent.includes('window.__DATA__')
+      )
+      eval(dataScript.textContent)
+      // console.log(window.__DATA__)
+      if (window.__DATA__.error_info !== '') {
+        frequentErrorShow.value=true
+        againTime.value=60000
+        setTimeout(()=>{
+          frequentErrorShow.value=false
+          againTime.value=0
+        })
+        await sleep(60000)
+        continue
       }
-      id=curdou.value.id
-      if('rating' in curdou.value){
-        rate=curdou.value.rating.value
+      let pic = 'https://images.wallpaperscraft.com/image/single/penguin_street_wall_1268495_240x320.jpg'
+      let rate = '0'
+      let dec = '暂无介绍'
+      let id = '-1'
+      if (curdou.value) {
+        const animeMsg = await window.__DATA__.items[0]
+        if(animeMsg!==null){
+          pic  = animeMsg?.cover_url    ?? pic
+          id   = animeMsg?.id           ?? id
+          rate = animeMsg?.rating?.value ?? rate
+
+          if(id!=='-1'){
+            const res2 = await getdoubandec(id)
+            dec = res2.data;
+            // console.log('dec='+dec)
+          }
+        }
       }
-      const res2=await getdoubandec(id)
-      dec=res2.data
-    }
-    return {
-      pic:pic,
-      rate:rate,
-      dec:dec,
-      id:id
+      return {
+        pic: pic,
+        rate: rate,
+        dec: dec,
+        id: id
+      }
     }
   }
 }
-const robotTestHtml=ref('')
-const robotTest=ref()
+const frequentErrorShow=ref(false)
+const againTime=ref(0)
+const reNew=ref()
 </script>
 
 <template>
@@ -351,8 +365,8 @@ const robotTest=ref()
   <div v-html="doubanHtml" ref="douban" style="display: none"></div>
   <div v-html="Dechtml" ref="Dec" style="display: none"></div>
   <div v-html="douban2html" ref="douban2" style="display: none"></div>
-  <div v-html="robotTestHtml" ref="robotTest" style="display: none"></div>
   <van-popup
+      ref="reNew"
       class="three"
       v-model:show="showBottom"
       position="bottom"
@@ -383,6 +397,10 @@ const robotTest=ref()
     </div>
       <van-button type="primary" block square class="footer" @click="renew">点击更新</van-button>
   </div>
+  <van-popup v-model:show="frequentErrorShow" position="top" :style="{ height: '100%' }">
+    <div>搜索过于频繁，将在倒计时结束后重试</div>
+    <van-count-down millisecond :time="againTime" format="HH:mm:ss:SS" />
+  </van-popup>
 </template>
 
 <style scoped>
